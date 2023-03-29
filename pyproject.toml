@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "rollercoaster"
+version = "0.1.0"
+description = ""
+authors = ["Jakob Schlyter <jakob@kirei.se>"]
+readme = "README.md"
+license = "BSD-2-Clause"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+dnspython = {git = "https://github.com/rthalley/dnspython.git", rev = "master"}
+cryptography = "^40.0.1"
+jinja2 = "^3.1.2"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+isort = "^5.12.0"
+pylama = "^8.4.1"
+pytest = "^7.2.2"
+pytest-isort = "^3.1.0"
+pytest-black = "^0.3.12"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+
+[tool.pylama.linter.pycodestyle]
+max_line_length = 132
+
+[tool.pylama.linter.mccabe]
+complexity = 40
+ignore = "C901"

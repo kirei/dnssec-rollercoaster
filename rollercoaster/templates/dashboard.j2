@@ -1,0 +1,99 @@
+<html>
+<head>
+<title>DNS Rollercoaster Dashboard</title>
+
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+th.current {
+  background-color: LightBlue;
+}
+
+td.publish {
+  background-color: LightGrey;
+}
+
+td.sign {
+  background-color: LightGreen;
+}
+
+td.revoked {
+  background-color: LightSalmon;
+}
+
+div.algorithm {
+  font-weight: bold;
+}
+div.ksk {
+  font-size: 80%;
+}
+div.keytag {
+  font-size: 80%;
+}
+</style>
+
+</head>
+
+<body>
+<table>
+
+<tr>
+{% for q in range(1, quarters+1) %}
+{% if q == current_quarter %}
+<th colspan="{{ slots }}" class="current">
+{% else %}
+<th colspan="{{ slots }}">
+{% endif %}
+Quarter {{ q }}
+</th>
+{% endfor %}
+</tr>
+
+<tr>
+{% for q in range(1, quarters+1) %}
+{% for s in range(1, slots+1) %}
+
+{% if q == current_quarter and s == current_slot %}
+<th class="current">
+{% else %}
+<th>
+{% endif %}
+{{ s }}
+</th>
+{% endfor %}
+{% endfor %}	
+</tr>
+
+{% for name, slots in rows.items() %}
+<tr>
+
+{% for slot in slots %}
+
+{% if slot and slot.revoked %}
+<td class="revoked">
+{% elif slot and slot.sign %}
+<td class="sign">
+{% elif slot and slot.publish %}
+<td class="publish">
+{% else %}
+<td>
+{% endif %}
+
+{% if slot %}
+<div class="algorithm">{{ slot.algorithm }}</div>
+<div class="ksk">{{ "KSK" if slot.ksk else "" }}</div>
+<div class="keytag">{{ slot.keytag }}</div>
+{% endif %}
+</td>
+{% endfor %}
+
+</tr>
+{% endfor %}
+
+	
+</table>
+</body>
+</html>

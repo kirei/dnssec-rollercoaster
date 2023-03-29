@@ -1,0 +1,7 @@
+keyring = "keyring.json"
+delta = 30
+
+[zone]
+origin = "."
+unsigned = "root.unsigned"
+signed = "root.signed"

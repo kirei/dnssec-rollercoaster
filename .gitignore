@@ -1,0 +1,5 @@
+root.signed
+root.unsigned
+root.zone
+poetry.local
+*.html
