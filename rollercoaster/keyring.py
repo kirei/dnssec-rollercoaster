@@ -61,6 +61,7 @@ class KeyRing:
                     logger.debug("Keeping existing ZSK(%d) for quarter %d", a, q)
 
     def delete(self, keyset: int, quarter: int, ksk: bool = False):
+        """Delete specific key (to trigger new key generation)"""
         name = "ksk" if ksk else f"zsk-q{quarter}"
         del self.keypairs[keyset][name]
         self.generate()
@@ -70,6 +71,7 @@ class KeyRing:
         self.keyspecs = [self.keyspecs[1], self.keyspecs[0]]
 
     def reset(self):
+        """Disable publish, sign, revoked for all keys"""
         for a, keys in enumerate(self.keypairs):
             for key in keys.values():
                 key.publish = False
@@ -85,10 +87,12 @@ class KeyRing:
             ],
         }
         with open(self.filename or filename, "wt") as fp:
+            logger.info("Saving keys to %s", filename)
             json.dump(keyring_dict, fp, indent=4)
 
     def load(self, filename: str) -> None:
         with open(filename, "rt") as fp:
+            logger.info("Loading keys from %s", filename)
             keyring_dict = json.load(fp)
         self.keyspecs = keyring_dict["keyspecs"]
         self.keypairs = [
@@ -106,13 +110,12 @@ class KeyRing:
         return res
 
     def update(self, quarter: int, slot: int) -> None:
-        a1 = self.keypairs[0]
-        a2 = self.keypairs[1]
-
-        # prev_quarter = 4 if quarter == 1 else quarter - 1
-        # next_quarter = (quarter + 1) % 4
+        """Update keyring based on quarter and slot"""
 
         self.reset()
+
+        a1 = self.keypairs[0]
+        a2 = self.keypairs[1]
 
         if quarter == 1:
             a1["ksk"].publish = True
@@ -226,3 +229,107 @@ class KeyRing:
             dns.dnssec.sign_zone(
                 zone=zone, add_dnskey=False, keys=keys, lifetime=lifetime, txn=txn
             )
+
+
+class KeyRingDoubleSigner(KeyRing):
+    pass
+
+
+class KeyRingSingleSigner(KeyRing):
+    def update(self, quarter: int, slot: int) -> None:
+        """Update keyring based on quarter and slot"""
+
+        self.reset()
+
+        a1 = self.keypairs[0]
+        a2 = self.keypairs[1]
+
+        if quarter == 1:
+            a1["ksk"].publish = True
+            a1["ksk"].sign = True
+            a1["zsk-q1"].publish = True
+            a1["zsk-q1"].sign = True
+
+            if slot == 1:
+                # post-publication
+                a1["zsk-q4"].publish = True
+
+            if slot == 9:
+                # pre-publication
+                a1["zsk-q2"].publish = True
+
+        elif quarter == 2:
+            a1["ksk"].publish = True
+            a1["ksk"].sign = True
+            a1["zsk-q2"].publish = True
+            a1["zsk-q2"].sign = True
+
+            if slot == 1:
+                # post-publication
+                a1["zsk-q1"].publish = True
+
+            if slot > 1:
+                # introduce new KSK
+                a2["ksk"].publish = True
+                a2["ksk"].sign = True
+                a2["zsk-q2"].publish = False
+                a2["zsk-q2"].sign = False
+
+            if slot == 9:
+                # post-publication
+                a1["zsk-q3"].publish = True
+                a2["zsk-q3"].publish = False
+
+        elif quarter == 3:
+            a1["ksk"].publish = True
+            a1["ksk"].sign = True
+            a1["zsk-q3"].publish = True
+            a1["zsk-q3"].sign = True
+
+            a2["ksk"].publish = True
+            a2["ksk"].sign = True
+            a2["zsk-q3"].publish = False
+            a2["zsk-q3"].sign = False
+
+            if slot == 1:
+                # post-publication
+                a1["zsk-q2"].publish = True
+                a2["zsk-q2"].publish = False
+            if slot == 9:
+                # pre-publication
+                a1["zsk-q4"].publish = False
+                a2["zsk-q4"].publish = True
+
+        elif quarter == 4:
+            a1["ksk"].publish = True
+            a1["ksk"].sign = True
+            a1["zsk-q4"].publish = False
+            a1["zsk-q4"].sign = False
+
+            a2["ksk"].publish = True
+            a2["ksk"].sign = True
+            a2["zsk-q4"].publish = True
+            a2["zsk-q4"].sign = True
+
+            if slot == 1:
+                # post-publication
+                a1["zsk-q3"].publish = True
+                a2["zsk-q3"].publish = False
+
+            if slot > 1:
+                a1["zsk-q4"].publish = False
+                a1["zsk-q4"].sign = False
+
+            if slot > 1 and slot < 9:
+                # revokation
+                a1["ksk"].revoked = True
+
+            if slot == 9:
+                # pre-publication
+                a1["ksk"].publish = False
+                a1["ksk"].sign = False
+                a2["zsk-q1"].publish = True
+
+                # drop alg 1
+                a1["ksk"].publish = False
+                a1["ksk"].sign = False

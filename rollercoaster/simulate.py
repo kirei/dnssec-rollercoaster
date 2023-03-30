@@ -1,6 +1,6 @@
 from dns.dnssectypes import Algorithm
 
-from rollercoaster.keyring import KeyRing
+from rollercoaster.keyring import KeyRing, KeyRingSingleSigner
 from rollercoaster.render import render_html, render_text
 
 KEYS_FILENAME = "keyring.json"
@@ -8,7 +8,7 @@ KEYS_FILENAME = "keyring.json"
 
 # logging.basicConfig(level=logging.DEBUG)
 
-keyring = KeyRing(
+keyring = KeyRingSingleSigner(
     # filename=KEYS_FILENAME,
     keyspecs=[
         {"algorithm": Algorithm.RSASHA256, "key_size": 2048},
