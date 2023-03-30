@@ -52,6 +52,10 @@ def render_html(
                     else:
                         rows[keypair.name].append(None)
 
+    for k, v in list(rows.items()):
+        if v.count(None) == len(v):
+            del rows[k]
+
     env = jinja2.Environment(
         loader=jinja2.PackageLoader("rollercoaster", "templates"),
         autoescape=jinja2.select_autoescape(),
