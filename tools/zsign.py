@@ -7,32 +7,11 @@ import dns.zone
 import dns.zonefile
 from cryptography.hazmat.backends import default_backend
 
-# from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, ed448, ed25519, rsa
 from dns.dnssectypes import Algorithm
 from dns.rdtypes.dnskeybase import Flag
 
-RSA_GENERATOR = functools.partial(
-    rsa.generate_private_key, backend=default_backend(), public_exponent=65537
-)
-
-KEY_GENERATORS = {
-    Algorithm.RSAMD5: RSA_GENERATOR,
-    Algorithm.DSA: dsa.generate_private_key,
-    Algorithm.RSASHA1: RSA_GENERATOR,
-    Algorithm.DSANSEC3SHA1: dsa.generate_private_key,
-    Algorithm.RSASHA1NSEC3SHA1: RSA_GENERATOR,
-    Algorithm.RSASHA256: RSA_GENERATOR,
-    Algorithm.RSASHA512: RSA_GENERATOR,
-    Algorithm.ECDSAP256SHA256: functools.partial(
-        ec.generate_private_key, curve=ec.SECP256R1
-    ),
-    Algorithm.ECDSAP384SHA384: functools.partial(
-        ec.generate_private_key, curve=ec.SECP384R1
-    ),
-    Algorithm.ED25519: ed25519.Ed25519PrivateKey.generate,
-    Algorithm.ED448: ed448.Ed448PrivateKey.generate,
-}
+from rollercoaster.keypair import KEY_GENERATORS
 
 
 def generate_key(spec: dict):
@@ -66,10 +45,12 @@ def main() -> None:
     args = parser.parse_args()
 
     keyspec = [
-        {"alg": "ED25519", "ksk": True, "sign": True},
-        {"alg": "ED25519", "ksk": False, "sign": True},
-        {"alg": "RSASHA256", "size": 2048, "ksk": True, "sign": True, "revoke": True},
+        {"alg": "RSASHA256", "size": 2048, "ksk": True, "sign": True},
         {"alg": "RSASHA256", "size": 2048, "ksk": False, "sign": True},
+        {"alg": "RSASHA256", "size": 2048, "ksk": False, "sign": False},
+        {"alg": "ECDSAP256SHA256", "ksk": True, "sign": True},
+        {"alg": "ECDSAP256SHA256", "ksk": False, "sign": True},
+        {"alg": "ECDSAP256SHA256", "ksk": False, "sign": False},
     ]
 
     keys = []
