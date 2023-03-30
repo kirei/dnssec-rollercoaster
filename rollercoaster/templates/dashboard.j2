@@ -9,15 +9,19 @@ table, th, td {
 }
 
 th.current {
-  background-color: LightBlue;
+  background-color: yellow;
 }
 
 td.publish {
   background-color: LightGrey;
 }
 
-td.sign {
+td.zsk {
   background-color: LightGreen;
+}
+
+td.ksk {
+  background-color: Cyan;
 }
 
 td.revoked {
@@ -26,9 +30,6 @@ td.revoked {
 
 div.algorithm {
   font-weight: bold;
-}
-div.ksk {
-  font-size: 80%;
 }
 div.keytag {
   font-size: 80%;
@@ -72,20 +73,28 @@ Quarter {{ q }}
 
 {% for slot in slots %}
 
-{% if slot and slot.revoked %}
-<td class="revoked">
-{% elif slot and slot.sign %}
-<td class="sign">
-{% elif slot and slot.publish %}
-<td class="publish">
-{% else %}
-<td>
+{% if slot %}
+  {% if slot.revoked %}
+    {% set class = "revoked" %}
+  {% elif slot.sign and slot.ksk %}
+    {% set class = "ksk" %}
+  {% elif slot.sign %}
+    {% set class = "zsk" %}
+  {% elif slot.publish %}
+    {% set class = "publish" %}
+  {% else %}
+    {% set class = "other" %}
+  {% endif %}
+
 {% endif %}
 
+<td class="{{ class }}">
+
 {% if slot %}
+<div class="{{ key_class }}">
 <div class="algorithm">{{ slot.algorithm }}</div>
-<div class="ksk">{{ "KSK" if slot.ksk else "" }}</div>
 <div class="keytag">{{ slot.keytag }}</div>
+</div>
 {% endif %}
 </td>
 {% endfor %}
