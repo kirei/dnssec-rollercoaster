@@ -1,5 +1,3 @@
-root.signed
-root.unsigned
-root.zone
-poetry.local
+root.*
+poetry.lock
 *.html

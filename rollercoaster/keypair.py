@@ -46,11 +46,12 @@ PRETTY_ALGORTIHM = {
     Algorithm.RSASHA1NSEC3SHA1: "RSA/SHA1/NSEC3",
     Algorithm.RSASHA256: "RSA/SHA-256",
     Algorithm.RSASHA512: "RSA/SHA-512",
-    Algorithm.ECDSAP256SHA256: "EcDSA/P-256/SHA-256",
-    Algorithm.ECDSAP384SHA384: "EcDSA/P-384/SHA-384",
+    Algorithm.ECDSAP256SHA256: "ECDSA/P-256/SHA-256",
+    Algorithm.ECDSAP384SHA384: "ECDSA/P-384/SHA-384",
     Algorithm.ED25519: "Ed25519",
     Algorithm.ED448: "Ed448",
 }
+
 
 
 @dataclass
