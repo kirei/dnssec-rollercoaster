@@ -6,7 +6,7 @@ root.zone:
 root.unsigned: root.zone root.hints
 	python3 tools/zprepare.py --input $< --output $@ --ns root.hints
 
-root.signed: root.unsigned
+root.signed: root.unsigned tools/zsign.py
 	python3 tools/zsign.py --input $< --output $@
 	dnssec-verify -o . $@
 
