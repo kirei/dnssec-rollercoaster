@@ -1,6 +1,8 @@
 keyring = "keyring.json"
 delta = 30
 
+reload = "echo reloading"
+
 [zone]
 origin = "."
 unsigned = "root.unsigned"
