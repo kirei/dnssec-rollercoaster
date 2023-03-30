@@ -1,15 +1,18 @@
 import argparse
 import logging
+import os
 import time
 import tomllib
 from datetime import timedelta
 from typing import Optional, Tuple
 
 import dns.dnssec
+import dns.name
 import dns.rdatatype
 import dns.zone
 import dns.zonefile
 from dns.dnssectypes import Algorithm
+from dns.rdtypes.ANY.TXT import TXT
 
 from rollercoaster import QUARTER_COUNT, SLOTS_PER_QUARTER
 from rollercoaster.keyring import KeyRing
@@ -47,6 +50,7 @@ def main():
     parser = argparse.ArgumentParser(description="DNS rollercoaster")
     parser.add_argument("--config", type=str, default="rollercoaster.toml")
     parser.add_argument("--debug", action="store_true", help="Enable debugging")
+    parser.add_argument("--loop", action="store_true", help="Continuous signing")
     args = parser.parse_args()
 
     if args.debug:
@@ -91,6 +95,13 @@ def main():
                 elif keypair.publish:
                     logger.debug("%d %s PUBLISHED", keypair.algorithm, name)
 
+        with zone.writer() as txn:
+            txn.replace(
+                dns.name.Name(["_rollercoaster"]) + zone.origin,
+                0,
+                TXT(dns.rdataclass.IN, dns.rdatatype.TXT, [f"q{quarter}s{slot}"]),
+            )
+
         with cmtimer("Signing zone", logger=logger):
             keyring.sign_zone(zone)
 
@@ -105,7 +116,13 @@ def main():
         logger.info("Saved signed zone to %s", filename)
 
         keyring.save()
-        logger.debug("Keyring saved")
+
+        if reload_command := config.get("reload"):
+            logger.info("Executing reload command")
+            os.system(reload_command)
+
+        if not args.loop:
+            break
 
         quarter, slot = get_next_qs(td)
 
