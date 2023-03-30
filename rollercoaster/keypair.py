@@ -53,7 +53,6 @@ PRETTY_ALGORTIHM = {
 }
 
 
-
 @dataclass
 class KeyPair:
     algorithm: Algorithm
