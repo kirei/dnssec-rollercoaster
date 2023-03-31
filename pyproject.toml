@@ -6,6 +6,9 @@ authors = ["Jakob Schlyter <jakob@kirei.se>"]
 readme = "README.md"
 license = "BSD-2-Clause"
 
+[tool.poetry.scripts]
+rollercoaster = "rollercoaster.signer:main"
+
 [tool.poetry.dependencies]
 python = "^3.11"
 dnspython = {git = "https://github.com/rthalley/dnspython.git", rev = "master"}

@@ -14,8 +14,8 @@ import dns.zonefile
 from dns.dnssectypes import Algorithm
 from dns.rdtypes.ANY.TXT import TXT
 
+import rollercoaster.keyring
 from rollercoaster import QUARTER_COUNT, SLOTS_PER_QUARTER
-from rollercoaster.keyring import KeyRing
 from rollercoaster.utils import cmtimer
 
 DEFAULT_SLOT_TIMEDELTA = timedelta(seconds=30)
@@ -48,7 +48,12 @@ def get_next_qs(td: timedelta = DEFAULT_SLOT_TIMEDELTA) -> Tuple[int, int]:
 
 def main():
     parser = argparse.ArgumentParser(description="DNS rollercoaster")
-    parser.add_argument("--config", type=str, default="rollercoaster.toml")
+    parser.add_argument(
+        "--config-file", dest="config_file", type=str, default="rollercoaster.toml"
+    )
+    parser.add_argument(
+        "--config-section", dest="config_section", type=str, default="zone"
+    )
     parser.add_argument("--debug", action="store_true", help="Enable debugging")
     parser.add_argument("--loop", action="store_true", help="Continuous signing")
     args = parser.parse_args()
@@ -58,14 +63,24 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
 
-    with open(args.config, "rb") as fp:
+    with open(args.config_file, "rb") as fp:
         config = tomllib.load(fp)
 
-    keyring = KeyRing(
-        filename=config["keyring"],
+    mode = config[args.config_section].get("mode", "double")
+    if mode == "double":
+        keyring_cls = rollercoaster.keyring.KeyRingDoubleSigner
+    elif mode == "single":
+        keyring_cls = rollercoaster.keyring.KeyRingSingleSigner
+    else:
+        raise ValueError("Unknown mode")
+
+    logger.info("Signing using %s", keyring_cls.__name__)
+
+    keyring = keyring_cls(
+        filename=config[args.config_section]["keyring"],
         keyspecs=[
             {"algorithm": Algorithm.RSASHA256, "key_size": 2048},
-            {"algorithm": Algorithm.ED25519},
+            {"algorithm": Algorithm.ECDSAP256SHA256},
         ],
     )
 
@@ -76,8 +91,8 @@ def main():
     while True:
         with cmtimer("Loading zone"):
             zone = dns.zone.from_file(
-                open(config["zone"]["unsigned"]),
-                origin=config["zone"]["origin"],
+                open(config[args.config_section]["unsigned"]),
+                origin=config[args.config_section]["origin"],
                 relativize=False,
             )
 
@@ -109,7 +124,7 @@ def main():
             logger.info("Flip keys")
             keyring.rotate()
 
-        filename = config["zone"]["signed"]
+        filename = config[args.config_section]["signed"]
         with open(filename, "wt") as fp:
             with cmtimer("Saving zone", logger=logger):
                 zone.to_file(fp)
@@ -117,7 +132,7 @@ def main():
 
         keyring.save()
 
-        if reload_command := config.get("reload"):
+        if reload_command := config[args.config_section].get("reload"):
             logger.info("Executing reload command")
             os.system(reload_command)
 

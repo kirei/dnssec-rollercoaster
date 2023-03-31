@@ -1,9 +1,17 @@
-keyring = "keyring.json"
 delta = 30
 
+[double]
+origin = "."
+mode = "double"
+keyring = "keyring.json"
+unsigned = "root.unsigned"
+signed = "root.signed_double"
 reload = "echo reloading"
 
-[zone]
+[single]
 origin = "."
+mode = "single"
+keyring = "keyring.json"
 unsigned = "root.unsigned"
-signed = "root.signed"
+signed = "root.signed_single"
+reload = "echo reloading"

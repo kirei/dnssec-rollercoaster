@@ -1,6 +1,6 @@
 from dns.dnssectypes import Algorithm
 
-from rollercoaster.keyring import KeyRing, KeyRingSingleSigner
+from rollercoaster.keyring import KeyRingDoubleSigner, KeyRingSingleSigner
 from rollercoaster.render import render_html, render_text
 
 KEYS_FILENAME = "keyring.json"
