@@ -25,9 +25,9 @@ def main() -> None:
         help="Unsigned zone filename",
     )
     parser.add_argument(
-        "--ns",
+        "--hints",
         metavar="filename",
-        help="Name server set",
+        help="Name server hints",
     )
 
     args = parser.parse_args()
@@ -43,11 +43,11 @@ def main() -> None:
     )
     exclude_glue = set()
 
-    if args.ns:
-        with open(args.ns) as fp:
-            ns_rrsets = dns.zonefile.read_rrsets(fp.read())
+    if args.hints:
+        with open(args.hints) as fp:
+            hints_rrsets = dns.zonefile.read_rrsets(fp.read())
     else:
-        ns_rrsets = None
+        hints_rrsets = None
 
     zone = dns.zone.from_file(open(args.input), origin=args.origin, relativize=False)
 
@@ -56,7 +56,7 @@ def main() -> None:
             if rdataset.rdtype in exclude_rdtypes:
                 txn.delete(name, rdataset)
             elif (
-                ns_rrsets
+                hints_rrsets
                 and name == zone.origin
                 and rdataset.rdtype == dns.rdatatype.NS
             ):
@@ -65,7 +65,7 @@ def main() -> None:
         for name in exclude_glue:
             txn.delete(name, zone.rdclass, dns.rdatatype.A)
             txn.delete(name, zone.rdclass, dns.rdatatype.AAAA)
-        for rrset in ns_rrsets:
+        for rrset in hints_rrsets:
             txn.add(rrset)
 
     if args.output:
