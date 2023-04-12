@@ -10,6 +10,9 @@ root.signed: root.unsigned tools/zsign.py
 	python3 tools/zsign.py --input $< --output $@
 	dnssec-verify -o . $@
 
+root.anchors: root.signed
+	python3 tools/zta.py --input $< --ds $@
+
 test:
 	pytest --isort --black --pylama
 
