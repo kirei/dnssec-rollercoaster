@@ -23,6 +23,34 @@ class KeyRing:
         if self.keypairs is None:
             self.generate()
 
+    def print_state(self):
+        for a, keys in self.enumerate():
+            for name, keypair in keys.items():
+                if keypair.revoked:
+                    logger.debug(
+                        "%s (%d) %s REVOKED (set %d)",
+                        keypair.algorithm.name,
+                        keypair.algorithm,
+                        name,
+                        a,
+                    )
+                elif keypair.sign:
+                    logger.debug(
+                        "%s (%d) %s SIGNING (set %d)",
+                        keypair.algorithm.name,
+                        keypair.algorithm,
+                        name,
+                        a,
+                    )
+                elif keypair.publish:
+                    logger.debug(
+                        "%s (%d) %s PUBLISHED (set %d)",
+                        keypair.algorithm.name,
+                        keypair.algorithm,
+                        name,
+                        a,
+                    )
+
     def enumerate(self):
         return enumerate(self.keypairs)
 
