@@ -9,12 +9,25 @@ build:
 	$(COMPOSE) build
 
 up:
-	$(COMPOSE) create
+	$(MAKE) up-rollercoaster
+	sleep 10
+	$(MAKE) up-unbound
+	$(MAKE) up-bind
+
+up-rollercoaster:
+	$(COMPOSE) create rollercoaster
 	$(MAKE) config-rollercoaster
 	$(COMPOSE) start rollercoaster
-	sleep 10
+
+up-unbound:
+	$(COMPOSE) create unbound
 	$(MAKE) config-unbound
 	$(COMPOSE) start unbound
+
+up-bind:
+	$(COMPOSE) create bind
+	$(MAKE) config-bind
+	$(COMPOSE) start bind
 
 down:
 	$(COMPOSE) down
@@ -25,17 +38,21 @@ cli:
 axfr:
 	$(COMPOSE) exec rollercoaster dig @127.0.0.1 . axfr
 
-ta:
+ta-unbound:
 	$(COMPOSE) exec unbound cat /etc/unbound/root.anchors
+
+ta-bind:
+	$(COMPOSE) exec bind rndc secroots
+	$(COMPOSE) exec bind cat /var/cache/bind/named.secroots
 
 reconfig:
 	$(COMPOSE) exec unbound unbound-control reload
 
 config-rollercoaster: root.unsigned
-	$(COMPOSE) cp rollercoaster/rollercoaster.toml rollercoaster:/config/rollercoaster.toml
+	$(COMPOSE) cp rollercoaster.toml rollercoaster:/config/rollercoaster.toml
 	$(COMPOSE) cp root.unsigned rollercoaster:/storage/root.unsigned
 	$(COMPOSE) cp root.unsigned rollercoaster:/storage/root.zone
-	$(COMPOSE) cp rollercoaster/nsd.conf rollercoaster:/config/nsd.conf
+	$(COMPOSE) cp nsd.conf rollercoaster:/config/nsd.conf
 	$(COMPOSE) cp root.hints rollercoaster://var/www/html/root.hints
 
 config-unbound:
@@ -44,12 +61,21 @@ config-unbound:
 	$(COMPOSE) cp rollercoaster:/var/www/html/root.anchors root.anchors
 	$(COMPOSE) cp root.anchors unbound:/etc/unbound/root.anchors
 
+config-bind:
+	$(COMPOSE) cp bind/named.conf.options bind:/etc/bind/named.conf.options
+	$(COMPOSE) cp rollercoaster:/var/www/html/root.anchors root.anchors
+	python3 bind/ta.py < root.anchors > bind/named.conf.local
+	$(COMPOSE) cp bind/named.conf.local bind:/etc/bind/named.conf.local
+	$(COMPOSE) cp root.hints bind:/usr/share/dns/root.hints
+
 root.zone:
 	curl -o $@ https://www.internic.net/domain/root.zone
 
 root.unsigned: root.zone root.hints
-	poetry run python3 ../tools/zprepare.py --hints root.hints --input $< --output $@
+	poetry run rollercoaster-hints --hints root.hints --input root.zone --output $@
 
 clean:
 	docker volume rm $(VOLUMES)
 	rm -f root.zone root.unsigned
+	rm -f bind/named.conf.local
+

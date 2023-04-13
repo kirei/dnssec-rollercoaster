@@ -31,3 +31,8 @@ services:
     image: docker.io/alpinelinux/unbound
     networks:
       rollercoaster:
+  bind:
+    image: docker.io/internetsystemsconsortium/bind9:9.19
+    entrypoint: "/usr/sbin/named -g -c /etc/bind/named.conf -u bind -T mkeytimers=1/6/90"
+    networks:
+      rollercoaster:
