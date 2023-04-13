@@ -99,6 +99,7 @@ def main():
     )
 
     td = timedelta(seconds=config["delta"])
+    refresh = (int(td.total_seconds()) // 10) or 1
 
     quarter, slot = get_current_qs(td)
 
@@ -149,7 +150,12 @@ def main():
             logger.info("Render dashboard to %s", dashboard)
             with open(dashboard, "wt") as fp:
                 fp.write(
-                    render_html(keyring, current_quarter=quarter, current_slot=slot)
+                    render_html(
+                        keyring,
+                        refresh=refresh,
+                        current_quarter=quarter,
+                        current_slot=slot,
+                    )
                 )
 
         if reload_command := config[args.config_section].get("reload"):

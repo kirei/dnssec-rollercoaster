@@ -38,6 +38,7 @@ def render_text(keyring: KeyRing) -> str:
 
 def render_html(
     keyring: KeyRing,
+    refresh: int,
     current_quarter: Optional[int] = None,
     current_slot: Optional[int] = None,
 ) -> str:
@@ -62,6 +63,7 @@ def render_html(
     )
     template = env.get_template("dashboard.j2")
     return template.render(
+        refresh=refresh,
         rows=rows,
         quarters=QUARTER_COUNT,
         slots=SLOTS_PER_QUARTER,
