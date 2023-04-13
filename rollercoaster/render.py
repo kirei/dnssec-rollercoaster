@@ -38,7 +38,7 @@ def render_text(keyring: KeyRing) -> str:
 
 def render_html(
     keyring: KeyRing,
-    refresh: int,
+    refresh: int = 60,
     current_quarter: Optional[int] = None,
     current_slot: Optional[int] = None,
 ) -> str:

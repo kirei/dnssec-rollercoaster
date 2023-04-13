@@ -21,6 +21,8 @@ from rollercoaster.render import render_html
 from rollercoaster.utils import cmtimer
 
 DEFAULT_SLOT_TIMEDELTA = timedelta(seconds=30)
+DEFAULT_DNSKEY_TTL = 60
+DEFAULT_LIFETIME = 3600
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +101,10 @@ def main():
     )
 
     td = timedelta(seconds=config["delta"])
-    refresh = (int(td.total_seconds()) // 10) or 1
+    refresh = (int(td.total_seconds()) // 5) or 5
+
+    dnskey_ttl = config[args.config_section].get("dnskey_ttl", DEFAULT_DNSKEY_TTL)
+    lifetime = config[args.config_section].get("lifetime", DEFAULT_LIFETIME)
 
     quarter, slot = get_current_qs(td)
 
@@ -126,7 +131,7 @@ def main():
             )
 
         with cmtimer("Signing zone", logger=logger):
-            keyring.sign_zone(zone)
+            keyring.sign_zone(zone, lifetime=lifetime, dnskey_ttl=dnskey_ttl)
 
         if filename := config[args.config_section].get("signed"):
             with open(filename, "wt") as fp:

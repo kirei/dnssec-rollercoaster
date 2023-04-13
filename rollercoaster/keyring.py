@@ -244,7 +244,7 @@ class KeyRing:
                 a1["ksk"].sign = False
 
     def sign_zone(
-        self, zone: dns.zone.Zone, lifetime: int = 86400, dnskey_ttl: int = 8600
+        self, zone: dns.zone.Zone, lifetime: int = 3600, dnskey_ttl: int = 60
     ):
         keypairs = []
         for _, k in enumerate(self.keypairs):
