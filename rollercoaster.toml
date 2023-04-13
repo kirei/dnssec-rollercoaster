@@ -1,14 +1,15 @@
-delta = 30
+delta = 10
 
 [default]
 origin = "."
 mode = "double"
 keyring = "keyring.json"
 unsigned = "root.unsigned"
-signed = "root.signed_double"
+signed = "root.signed"
 anchors = "root.anchors"
 dashboard = "dashboard.html"
-reload = "echo reloading"
+dnskey_ttl = 60
+#reload = "echo reloading"
 
 [double]
 origin = "."
