@@ -121,13 +121,15 @@ class KeyPair:
     @classmethod
     def generate(
         cls,
-        algorithm: Union[str, Algorithm],
+        algorithm: Union[str, int, Algorithm],
         key_size: Optional[int] = None,
         ksk: bool = False,
         name: Optional[str] = None,
     ):
         if isinstance(algorithm, str):
             algorithm = Algorithm[algorithm.upper()]
+        if not isinstance(algorithm, Algorithm):
+            algorithm = Algorithm(int(algorithm))
         kwargs = {}
         if key_size:
             kwargs["key_size"] = key_size
@@ -139,4 +141,11 @@ class KeyPair:
             ksk=ksk,
         )
         res.keytag = dns.dnssec.key_id(res.dnskey)
+        logger.debug(
+            "Generated %s (%d) keytag=%d, ksk=%s",
+            res.algorithm.name,
+            res.algorithm,
+            res.keytag,
+            res.ksk,
+        )
         return res
