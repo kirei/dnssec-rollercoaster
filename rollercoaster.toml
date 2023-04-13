@@ -1,5 +1,15 @@
 delta = 30
 
+[default]
+origin = "."
+mode = "double"
+keyring = "keyring.json"
+unsigned = "root.unsigned"
+signed = "root.signed_double"
+anchors = "root.anchors"
+dashboard = "dashboard.html"
+reload = "echo reloading"
+
 [double]
 origin = "."
 mode = "double"
