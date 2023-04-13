@@ -10,5 +10,5 @@ nsd $NSD_OPTIONS
 echo "Starting webserver..."
 lighttpd -f /etc/lighttpd/lighttpd.conf
 
-echo "Running DNS Rollercoaster..."
+echo "Running DNSSEC Rollercoaster..."
 rollercoaster-signer --config-file=/config/rollercoaster.toml --loop

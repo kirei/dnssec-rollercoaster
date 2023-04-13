@@ -63,7 +63,7 @@ def get_zone_trust_anchors(zone: dns.zone.Zone) -> dns.rrset.RRset:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="DNS rollercoaster")
+    parser = argparse.ArgumentParser(description="DNSSEC Rollercoaster")
     parser.add_argument(
         "--config-file", dest="config_file", type=str, default="rollercoaster.toml"
     )
