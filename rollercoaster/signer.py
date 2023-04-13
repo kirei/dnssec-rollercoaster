@@ -22,7 +22,6 @@ from rollercoaster.utils import cmtimer
 
 DEFAULT_SLOT_TIMEDELTA = timedelta(seconds=30)
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -116,14 +115,7 @@ def main():
         keyring.generate(quarter, slot)
         keyring.update(quarter, slot)
 
-        for a, keys in keyring.enumerate():
-            for name, keypair in keys.items():
-                if keypair.revoked:
-                    logger.debug("%d %s REVOKED", keypair.algorithm, name)
-                elif keypair.sign:
-                    logger.debug("%d %s SIGNING", keypair.algorithm, name)
-                elif keypair.publish:
-                    logger.debug("%d %s PUBLISHED", keypair.algorithm, name)
+        keyring.print_state()
 
         with zone.writer() as txn:
             txn.replace(
@@ -135,15 +127,15 @@ def main():
         with cmtimer("Signing zone", logger=logger):
             keyring.sign_zone(zone)
 
-        if quarter == 4 and slot == 9:
-            logger.info("Flip keys")
-            keyring.rotate()
+        if filename := config[args.config_section].get("signed"):
+            with open(filename, "wt") as fp:
+                with cmtimer("Saving zone", logger=logger):
+                    zone.to_file(fp)
+            logger.info("Saved signed zone to %s", filename)
 
-        filename = config[args.config_section]["signed"]
-        with open(filename, "wt") as fp:
-            with cmtimer("Saving zone", logger=logger):
-                zone.to_file(fp)
-        logger.info("Saved signed zone to %s", filename)
+        if quarter == 4 and slot == 9:
+            logger.info("Rotate keys")
+            keyring.rotate()
 
         keyring.save()
 
