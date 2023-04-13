@@ -1,0 +1,13 @@
+delta = 30
+
+[default]
+mode = "double"
+#mode = "single"
+
+origin = "."
+keyring = "/storage/keyring.json"
+unsigned = "/storage/root.unsigned"
+signed = "/storage/root.zone"
+anchors =  "/var/www/html/root.anchors"
+dashboard = "/var/www/html/index.html"
+reload = "nsd-control reload"

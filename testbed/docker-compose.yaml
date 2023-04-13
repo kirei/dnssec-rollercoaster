@@ -1,0 +1,33 @@
+version: '2'
+
+#volumes:
+#  rollercoaster:
+
+networks:
+  rollercoaster:
+    enable_ipv6: True
+    ipam:
+      driver: default
+      config:
+        - subnet: "10.0.0.0/24"
+        - subnet: "fd00::/64"
+
+services:
+  rollercoaster:
+    image: rollercoaster
+    build:
+      context: rollercoaster
+      pull: True
+    ports:
+      - 8080:80/tcp
+      - 8053:53/tcp
+    #volumes:
+    # - rollercoaster:/storage
+    networks:
+      rollercoaster:
+        ipv4_address: "10.0.0.53"
+        ipv6_address: "fd00::53"
+  unbound:
+    image: docker.io/alpinelinux/unbound
+    networks:
+      rollercoaster:
