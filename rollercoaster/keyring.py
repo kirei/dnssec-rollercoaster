@@ -28,26 +28,32 @@ class KeyRing:
             for name, keypair in keys.items():
                 if keypair.revoked:
                     logger.debug(
-                        "%s (%d) %s REVOKED (set %d)",
+                        "%s (%d) %s REVOKED (keytag %d, flags %d, set %d)",
                         keypair.algorithm.name,
                         keypair.algorithm,
                         name,
+                        keypair.keytag,
+                        keypair.flags,
                         a,
                     )
                 elif keypair.sign:
                     logger.debug(
-                        "%s (%d) %s SIGNING (set %d)",
+                        "%s (%d) %s SIGNING (keytag %d, flags %d, set %d)",
                         keypair.algorithm.name,
                         keypair.algorithm,
                         name,
+                        keypair.keytag,
+                        keypair.flags,
                         a,
                     )
                 elif keypair.publish:
                     logger.debug(
-                        "%s (%d) %s PUBLISHED (set %d)",
+                        "%s (%d) %s PUBLISHED (keytag %d, flags %d, set %d)",
                         keypair.algorithm.name,
                         keypair.algorithm,
                         name,
+                        keypair.keytag,
+                        keypair.flags,
                         a,
                     )
 
@@ -68,10 +74,11 @@ class KeyRing:
             del self.keypairs[0]["zsk-q4"]
 
         for a, keyspec in enumerate(self.keyspecs):
+            prefix = "a" + str(int(keyspec["algorithm"]))
             if "ksk" not in self.keypairs[a]:
                 logger.info("Generating new KSK(%d)", a)
                 self.keypairs[a]["ksk"] = KeyPair.generate(
-                    name=f"a{a+1}-ksk",
+                    name=f"{prefix}-ksk",
                     ksk=True,
                     **keyspec,
                 )
@@ -81,7 +88,7 @@ class KeyRing:
                 if f"zsk-q{q}" not in self.keypairs[a]:
                     logger.info("Generating new ZSK(%d) for quarter %d", a, q)
                     self.keypairs[a][f"zsk-q{q}"] = KeyPair.generate(
-                        name=f"a{a+1}-zsk-q{q}",
+                        name=f"{prefix}-zsk-q{q}",
                         ksk=False,
                         **keyspec,
                     )
@@ -350,7 +357,7 @@ class KeyRingSingleSigner(KeyRing):
                 a1["zsk-q4"].sign = False
 
             if slot > 1 and slot < 9:
-                # revokation
+                # revocation
                 a1["ksk"].revoked = True
 
             if slot == 9:
