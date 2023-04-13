@@ -1,3 +1,4 @@
 root.*
 poetry.lock
 *.html
+*.whl
