@@ -3,7 +3,7 @@ all: root.unsigned
 root.zone:
 	curl -o $@ https://www.internic.net/domain/root.zone
 
-root.unsigned: root.zone root.hints tools/zprepare.py
+root.unsigned: root.zone root.hints
 	poetry run rollercoaster-hints --hints root.hints --input $< --output $@
 
 root.signed: root.unsigned tools/zsign.py

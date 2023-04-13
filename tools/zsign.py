@@ -1,12 +1,9 @@
 import argparse
-import functools
 
 import dns.dnssec
 import dns.rdatatype
 import dns.zone
 import dns.zonefile
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import dsa, ec, ed448, ed25519, rsa
 from dns.dnssectypes import Algorithm
 from dns.rdtypes.dnskeybase import Flag
 
