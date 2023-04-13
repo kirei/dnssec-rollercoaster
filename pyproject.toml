@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "rollercoaster"
 version = "0.1.0"
-description = ""
+description = "DNS Rollercoaster"
 authors = ["Jakob Schlyter <jakob@kirei.se>"]
 readme = "README.md"
 license = "BSD-2-Clause"
