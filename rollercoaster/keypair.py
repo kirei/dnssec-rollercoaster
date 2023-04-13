@@ -106,7 +106,7 @@ class KeyPair:
     @classmethod
     def from_dict(cls, data: dict):
         return cls(
-            algorithm=data["algorithm"],
+            algorithm=Algorithm(data["algorithm"]),
             private_key=serialization.load_pem_private_key(
                 data["private_key"].encode(), password=None
             ),

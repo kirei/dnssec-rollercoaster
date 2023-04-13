@@ -11,11 +11,13 @@ import dns.name
 import dns.rdatatype
 import dns.zone
 import dns.zonefile
-from dns.dnssectypes import Algorithm
+from dns.dnssectypes import Algorithm, DSDigest
 from dns.rdtypes.ANY.TXT import TXT
+from dns.rdtypes.dnskeybase import Flag
 
 import rollercoaster.keyring
 from rollercoaster import QUARTER_COUNT, SLOTS_PER_QUARTER
+from rollercoaster.render import render_html
 from rollercoaster.utils import cmtimer
 
 DEFAULT_SLOT_TIMEDELTA = timedelta(seconds=30)
@@ -41,9 +43,22 @@ def get_next_qs(td: timedelta = DEFAULT_SLOT_TIMEDELTA) -> Tuple[int, int]:
     t1 = int(time.time())
     t2 = t1 // slot_length * slot_length + slot_length
     w = t2 - t1
-    logger.debug("Waiting %d seconds for next slot", w)
+    logger.info("Waiting %d seconds for next slot", w)
     time.sleep(w)
     return get_current_qs(td=td, t=t2)
+
+
+def get_zone_trust_anchors(zone: dns.zone.Zone) -> dns.rrset.RRset:
+    dnskey_rrset = zone.get_rrset(zone.origin, dns.rdatatype.DNSKEY)
+    ds_rdatasets = []
+    for rdata in dnskey_rrset:
+        if rdata.flags & Flag.SEP and not rdata.flags & Flag.REVOKE:
+            ds_rdatasets.append(
+                dns.dnssec.make_ds(
+                    name=zone.origin, key=rdata, algorithm=DSDigest.SHA256
+                )
+            )
+    return dns.rrset.from_rdata_list(zone.origin, dnskey_rrset.ttl, ds_rdatasets)
 
 
 def main():
@@ -52,7 +67,7 @@ def main():
         "--config-file", dest="config_file", type=str, default="rollercoaster.toml"
     )
     parser.add_argument(
-        "--config-section", dest="config_section", type=str, default="zone"
+        "--config-section", dest="config_section", type=str, default="default"
     )
     parser.add_argument("--debug", action="store_true", help="Enable debugging")
     parser.add_argument("--loop", action="store_true", help="Continuous signing")
@@ -131,6 +146,19 @@ def main():
         logger.info("Saved signed zone to %s", filename)
 
         keyring.save()
+
+        if anchors := config[args.config_section].get("anchors"):
+            logger.info("Saving trust anchors to %s", anchors)
+            ds = get_zone_trust_anchors(zone)
+            with open(anchors, "wt") as fp:
+                fp.write(ds.to_text())
+
+        if dashboard := config[args.config_section].get("dashboard"):
+            logger.info("Render dashboard to %s", dashboard)
+            with open(dashboard, "wt") as fp:
+                fp.write(
+                    render_html(keyring, current_quarter=quarter, current_slot=slot)
+                )
 
         if reload_command := config[args.config_section].get("reload"):
             logger.info("Executing reload command")

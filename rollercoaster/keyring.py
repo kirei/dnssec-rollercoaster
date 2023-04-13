@@ -86,7 +86,8 @@ class KeyRing:
                 for keys in self.keypairs
             ],
         }
-        with open(self.filename or filename, "wt") as fp:
+        filename = filename or self.filename
+        with open(filename, "wt") as fp:
             logger.info("Saving keys to %s", filename)
             json.dump(keyring_dict, fp, indent=4)
 
