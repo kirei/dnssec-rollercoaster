@@ -42,10 +42,10 @@ ta-bind:
 reconfig:
 	$(COMPOSE) exec unbound unbound-control reload
 
-config-rollercoaster: root.unsigned
+config-rollercoaster: root.zone
 	$(COMPOSE) cp rollercoaster.toml rollercoaster:/config/rollercoaster.toml
-	$(COMPOSE) cp root.unsigned rollercoaster:/storage/root.unsigned
-	$(COMPOSE) cp root.unsigned rollercoaster:/storage/root.zone
+	$(COMPOSE) cp root.zone rollercoaster:/storage/root.upstream
+	$(COMPOSE) cp root.zone rollercoaster:/storage/root.zone
 	$(COMPOSE) cp nsd.conf rollercoaster:/config/nsd.conf
 	$(COMPOSE) cp root.hints rollercoaster://var/www/html/root.hints
 
@@ -64,9 +64,6 @@ config-bind:
 
 root.zone:
 	curl -o $@ https://www.internic.net/domain/root.zone
-
-root.unsigned: root.zone root.hints
-	poetry run rollercoaster-hints --hints root.hints --input root.zone --output $@
 
 clean:
 	docker volume rm $(VOLUMES)

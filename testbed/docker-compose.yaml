@@ -16,7 +16,7 @@ services:
   rollercoaster:
     image: rollercoaster
     ports:
-      - 8080:80/tcp
+      - 8080:8080/tcp
       - 8053:53/tcp
     #volumes:
     # - rollercoaster:/storage
