@@ -13,18 +13,29 @@ dashboard = "dashboard.html"
 dnskey_ttl = 60
 #reload = "echo reloading"
 
+[default.algorithms.1]
+algorithm = "RSASHA256"
+key_size = 2048
+
+[default.algorithms.2]
+algorithm = "ED25519"
+
 [double]
 origin = "."
 mode = "double"
 keyring = "keyring.json"
+upstream = "root.zone"
 unsigned = "root.unsigned"
 signed = "root.signed_double"
-reload = "echo reloading"
+anchors = "root.anchors"
+hints = "root.hints"
 
 [single]
 origin = "."
 mode = "single"
 keyring = "keyring.json"
+upstream = "root.zone"
 unsigned = "root.unsigned"
 signed = "root.signed_single"
-reload = "echo reloading"
+anchors = "root.anchors"
+hints = "root.hints"

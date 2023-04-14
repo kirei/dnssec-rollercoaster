@@ -65,6 +65,8 @@ def get_zone_trust_anchors(zone: dns.zone.Zone) -> dns.rrset.RRset:
 def prepare_zone(
     zone: dns.zone.Zone, hints_rrsets: Optional[List[dns.rrset.RRset]] = None
 ):
+    """Prepare zone by removing signatures and replace hints"""
+
     exclude_rdtypes = set(
         [
             dns.rdatatype.DNSKEY,
@@ -91,6 +93,33 @@ def prepare_zone(
             txn.delete(name, zone.rdclass, dns.rdatatype.AAAA)
         for rrset in hints_rrsets:
             txn.add(rrset)
+
+
+def get_keyring(config: dict) -> rollercoaster.keyring.KeyRing:
+    """Generate keyring"""
+
+    mode = config.get("mode", "double")
+    if mode == "double":
+        keyring_cls = rollercoaster.keyring.KeyRingDoubleSigner
+    elif mode == "single":
+        keyring_cls = rollercoaster.keyring.KeyRingSingleSigner
+    else:
+        raise ValueError("Unknown mode")
+
+    logger.info("Signing using %s", keyring_cls.__name__)
+
+    if algorithms := config.get("algorithms"):
+        keyspecs = [{**algorithms["1"]}, {**algorithms["2"]}]
+    else:
+        keyspecs = [
+            {"algorithm": Algorithm.RSASHA256, "key_size": 2048},
+            {"algorithm": Algorithm.ECDSAP256SHA256},
+        ]
+
+    for k in keyspecs:
+        if isinstance(k["algorithm"], str):
+            k["algorithm"] = Algorithm[k["algorithm"].upper()]
+    return keyring_cls(filename=config["keyring"], keyspecs=keyspecs)
 
 
 def main():
@@ -130,23 +159,7 @@ def main():
             with open(config[args.config_section]["unsigned"], "wt") as fp:
                 zone.to_file(fp)
 
-    mode = config[args.config_section].get("mode", "double")
-    if mode == "double":
-        keyring_cls = rollercoaster.keyring.KeyRingDoubleSigner
-    elif mode == "single":
-        keyring_cls = rollercoaster.keyring.KeyRingSingleSigner
-    else:
-        raise ValueError("Unknown mode")
-
-    logger.info("Signing using %s", keyring_cls.__name__)
-
-    keyring = keyring_cls(
-        filename=config[args.config_section]["keyring"],
-        keyspecs=[
-            {"algorithm": Algorithm.RSASHA256, "key_size": 2048},
-            {"algorithm": Algorithm.ECDSAP256SHA256},
-        ],
-    )
+    keyring = get_keyring(config[args.config_section])
 
     td = timedelta(seconds=config["delta"])
     refresh = (int(td.total_seconds()) // 5) or 5
