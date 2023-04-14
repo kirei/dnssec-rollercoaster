@@ -15,9 +15,6 @@ networks:
 services:
   rollercoaster:
     image: rollercoaster
-    build:
-      context: rollercoaster
-      pull: True
     ports:
       - 8080:80/tcp
       - 8053:53/tcp

@@ -1,5 +1,11 @@
 all: root.unsigned
 
+container:
+	rm -f dist/*.whl docker/*.whl
+	poetry build -n -f wheel
+	mv dist/*.whl docker
+	(cd docker; docker build -t rollercoaster .; rm *.whl)
+
 root.zone:
 	curl -o $@ https://www.internic.net/domain/root.zone
 

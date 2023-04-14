@@ -2,12 +2,6 @@ COMPOSE=	docker compose
 VOLUMES=	testbed_rollercoaster
 
 
-build:
-	rm ../dist/*.whl
-	(cd ..; poetry build)
-	cp ../dist/*.whl rollercoaster
-	$(COMPOSE) build
-
 up:
 	$(MAKE) up-rollercoaster
 	sleep 10
