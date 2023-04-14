@@ -4,7 +4,7 @@ import os
 import time
 import tomllib
 from datetime import timedelta
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import dns.dnssec
 import dns.name
@@ -62,6 +62,37 @@ def get_zone_trust_anchors(zone: dns.zone.Zone) -> dns.rrset.RRset:
     return dns.rrset.from_rdata_list(zone.origin, dnskey_rrset.ttl, ds_rdatasets)
 
 
+def prepare_zone(
+    zone: dns.zone.Zone, hints_rrsets: Optional[List[dns.rrset.RRset]] = None
+):
+    exclude_rdtypes = set(
+        [
+            dns.rdatatype.DNSKEY,
+            dns.rdatatype.RRSIG,
+            dns.rdatatype.NSEC,
+            dns.rdatatype.NSEC3,
+            dns.rdatatype.NSEC3PARAM,
+        ]
+    )
+    exclude_glue = set()
+    with zone.writer() as txn:
+        for name, rdataset in txn.iterate_rdatasets():
+            if rdataset.rdtype in exclude_rdtypes:
+                txn.delete(name, rdataset)
+            elif (
+                hints_rrsets
+                and name == zone.origin
+                and rdataset.rdtype == dns.rdatatype.NS
+            ):
+                exclude_glue.update([rr.target for rr in rdataset])
+                txn.delete(name, rdataset)
+        for name in exclude_glue:
+            txn.delete(name, zone.rdclass, dns.rdatatype.A)
+            txn.delete(name, zone.rdclass, dns.rdatatype.AAAA)
+        for rrset in hints_rrsets:
+            txn.add(rrset)
+
+
 def main():
     parser = argparse.ArgumentParser(description="DNSSEC Rollercoaster")
     parser.add_argument(
@@ -81,6 +112,23 @@ def main():
 
     with open(args.config_file, "rb") as fp:
         config = tomllib.load(fp)
+
+    if hints := config[args.config_section].get("hints"):
+        with open(hints) as fp:
+            hints_rrsets = dns.zonefile.read_rrsets(fp.read())
+    else:
+        hints_rrsets = None
+
+    if filename := config[args.config_section].get("upstream"):
+        with cmtimer("Prepare zone", logger=logger):
+            zone = dns.zone.from_file(
+                open(filename),
+                origin=config[args.config_section]["origin"],
+                relativize=False,
+            )
+            prepare_zone(zone, hints_rrsets)
+            with open(config[args.config_section]["unsigned"], "wt") as fp:
+                zone.to_file(fp)
 
     mode = config[args.config_section].get("mode", "double")
     if mode == "double":
