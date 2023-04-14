@@ -8,6 +8,7 @@ echo "Starting NSD..."
 nsd $NSD_OPTIONS
 
 echo "Starting webserver..."
+sed -i 's/^server\.port.*/server.port=8080/' /etc/lighttpd/lighttpd.conf
 lighttpd -f /etc/lighttpd/lighttpd.conf
 
 echo "Running DNSSEC Rollercoaster..."
