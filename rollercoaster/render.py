@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime, timezone
 from typing import Optional
 
 import jinja2
@@ -63,6 +64,7 @@ def render_html(
     )
     template = env.get_template("dashboard.j2")
     return template.render(
+        now=datetime.now(timezone.utc),
         refresh=refresh,
         rows=rows,
         quarters=QUARTER_COUNT,
