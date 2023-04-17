@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import jinja2
@@ -40,6 +40,7 @@ def render_text(keyring: KeyRing) -> str:
 def render_html(
     keyring: KeyRing,
     refresh: int = 60,
+    delta: Optional[timedelta] = None,
     current_quarter: Optional[int] = None,
     current_slot: Optional[int] = None,
 ) -> str:
@@ -65,6 +66,7 @@ def render_html(
     template = env.get_template("dashboard.j2")
     return template.render(
         now=datetime.now(timezone.utc),
+        delta=int(delta.total_seconds()),
         refresh=refresh,
         rows=rows,
         quarters=QUARTER_COUNT,

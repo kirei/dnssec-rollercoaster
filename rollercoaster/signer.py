@@ -218,6 +218,7 @@ def main():
                 fp.write(
                     render_html(
                         keyring,
+                        delta=td,
                         refresh=refresh,
                         current_quarter=quarter,
                         current_slot=slot,
