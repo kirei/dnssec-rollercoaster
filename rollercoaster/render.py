@@ -66,7 +66,7 @@ def render_html(
     template = env.get_template("dashboard.j2")
     return template.render(
         now=datetime.now(timezone.utc),
-        delta=int(delta.total_seconds()),
+        delta=int(delta.total_seconds()) if delta else None,
         refresh=refresh,
         rows=rows,
         quarters=QUARTER_COUNT,
