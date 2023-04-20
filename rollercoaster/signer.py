@@ -49,7 +49,7 @@ def get_next_qs(td: timedelta = DEFAULT_SLOT_TIMEDELTA) -> Tuple[int, int]:
     return get_current_qs(td=td, t=t2)
 
 
-def get_zone_trust_anchors(zone: dns.zone.Zone) -> dns.rrset.RRset:
+def get_zone_trust_anchors_ds(zone: dns.zone.Zone) -> dns.rrset.RRset:
     dnskey_rrset = zone.get_rrset(zone.origin, dns.rdatatype.DNSKEY)
     ds_rdatasets = []
     for rdata in dnskey_rrset:
@@ -60,6 +60,15 @@ def get_zone_trust_anchors(zone: dns.zone.Zone) -> dns.rrset.RRset:
                 )
             )
     return dns.rrset.from_rdata_list(zone.origin, dnskey_rrset.ttl, ds_rdatasets)
+
+
+def get_zone_trust_anchors_dnskey(zone: dns.zone.Zone) -> dns.rrset.RRset:
+    dnskey_rrset = zone.get_rrset(zone.origin, dns.rdatatype.DNSKEY)
+    ta_dnskey_rdatasets = []
+    for rdata in dnskey_rrset:
+        if rdata.flags & Flag.SEP and not rdata.flags & Flag.REVOKE:
+            ta_dnskey_rdatasets.append(rdata)
+    return dns.rrset.from_rdata_list(zone.origin, dnskey_rrset.ttl, ta_dnskey_rdatasets)
 
 
 def prepare_zone(
@@ -208,9 +217,13 @@ def main():
 
         if anchors := config[args.config_section].get("anchors"):
             logger.info("Saving trust anchors to %s", anchors)
-            ds = get_zone_trust_anchors(zone)
+            ds_ta_rrset = get_zone_trust_anchors_ds(zone)
+            dnskey_ta_rrset = get_zone_trust_anchors_dnskey(zone)
             with open(anchors, "wt") as fp:
-                fp.write(ds.to_text())
+                for rdata in ds_ta_rrset:
+                    print(f"{zone.origin} IN DS {rdata}", file=fp)
+                for rdata in dnskey_ta_rrset:
+                    print(f"; {zone.origin} IN DNSKEY {rdata}", file=fp)
 
         if dashboard := config[args.config_section].get("dashboard"):
             logger.info("Render dashboard to %s", dashboard)
