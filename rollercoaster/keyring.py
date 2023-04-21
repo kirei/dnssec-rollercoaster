@@ -317,8 +317,8 @@ class KeyRingSingleSigner(KeyRing):
                 a2["zsk-q3"].publish = False
 
         elif quarter == 3:
-            a1["ksk"].publish = False
-            a1["ksk"].sign = False
+            #a1["ksk"].publish = True
+            #a1["ksk"].sign = True
             a1["zsk-q3"].publish = False
             a1["zsk-q3"].sign = False
 
@@ -337,7 +337,7 @@ class KeyRingSingleSigner(KeyRing):
                 a2["zsk-q4"].publish = True
 
         elif quarter == 4:
-            a1["ksk"].publish = True
+            a1["ksk"].publish = False
             a1["ksk"].sign = False
             a1["zsk-q4"].publish = False
             a1["zsk-q4"].sign = False
@@ -349,6 +349,8 @@ class KeyRingSingleSigner(KeyRing):
 
             if slot == 1:
                 # post-publication
+                #a1["ksk"].publish = True
+                #a1["ksk"].sign = True
                 a1["zsk-q3"].publish = False
                 a2["zsk-q3"].publish = True
 
@@ -359,6 +361,7 @@ class KeyRingSingleSigner(KeyRing):
             if slot > 1 and slot < 9:
                 # revocation
                 a1["ksk"].sign = True
+                a1["ksk"].publish = True
                 a1["ksk"].revoked = True
 
             if slot == 9:
