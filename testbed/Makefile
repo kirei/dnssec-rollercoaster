@@ -4,7 +4,7 @@ VOLUMES=	testbed_rollercoaster
 
 up:
 	$(MAKE) up-rollercoaster
-	sleep 10
+	sleep 20
 	$(MAKE) up-unbound
 	$(MAKE) up-bind
 
@@ -41,6 +41,7 @@ ta-bind:
 
 reconfig:
 	$(COMPOSE) exec unbound unbound-control reload
+	$(COMPOSE) exec bind rndc reload
 
 config-rollercoaster: root.zone
 	$(COMPOSE) cp rollercoaster.toml rollercoaster:/config/rollercoaster.toml
@@ -63,7 +64,7 @@ config-bind:
 	$(COMPOSE) cp root.hints bind:/usr/share/dns/root.hints
 
 root.anchors:
-	$(COMPOSE) cp unbound:/etc/unbound/root.anchors $@
+	$(COMPOSE) cp rollercoaster:/var/www/html/root.anchors root.anchors
 
 root.zone:
 	curl -o $@ https://www.internic.net/domain/root.zone
