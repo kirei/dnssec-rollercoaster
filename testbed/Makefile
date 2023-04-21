@@ -62,11 +62,14 @@ config-bind:
 	$(COMPOSE) cp bind/named.conf.local bind:/etc/bind/named.conf.local
 	$(COMPOSE) cp root.hints bind:/usr/share/dns/root.hints
 
+root.anchors:
+	$(COMPOSE) cp unbound:/etc/unbound/root.anchors $@
+
 root.zone:
 	curl -o $@ https://www.internic.net/domain/root.zone
 
 clean:
 	docker volume rm $(VOLUMES)
-	rm -f root.zone root.unsigned
+	rm -f root.zone root.unsigned root.anchors
 	rm -f bind/named.conf.local
 
