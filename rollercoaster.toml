@@ -19,23 +19,3 @@ key_size = 2048
 
 [default.algorithms.2]
 algorithm = "ED25519"
-
-[double]
-origin = "."
-mode = "double"
-keyring = "keyring.json"
-upstream = "root.zone"
-unsigned = "root.unsigned"
-signed = "root.signed_double"
-anchors = "root.anchors"
-hints = "root.hints"
-
-[single]
-origin = "."
-mode = "single"
-keyring = "keyring.json"
-upstream = "root.zone"
-unsigned = "root.unsigned"
-signed = "root.signed_single"
-anchors = "root.anchors"
-hints = "root.hints"
