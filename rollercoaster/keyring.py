@@ -263,7 +263,12 @@ class KeyRing:
             for dnskey in dnskeys:
                 txn.add(zone.origin, dnskey_ttl, dnskey)
             dns.dnssec.sign_zone(
-                zone=zone, add_dnskey=False, keys=keys, lifetime=lifetime, txn=txn, policy=dns.dnssec.allow_all_policy
+                zone=zone,
+                add_dnskey=False,
+                keys=keys,
+                lifetime=lifetime,
+                txn=txn,
+                policy=dns.dnssec.allow_all_policy,
             )
 
 
@@ -317,8 +322,8 @@ class KeyRingSingleSigner(KeyRing):
                 a2["zsk-q3"].publish = False
 
         elif quarter == 3:
-            #a1["ksk"].publish = True
-            #a1["ksk"].sign = True
+            # a1["ksk"].publish = True
+            # a1["ksk"].sign = True
             a1["zsk-q3"].publish = False
             a1["zsk-q3"].sign = False
 
@@ -349,8 +354,8 @@ class KeyRingSingleSigner(KeyRing):
 
             if slot == 1:
                 # post-publication
-                #a1["ksk"].publish = True
-                #a1["ksk"].sign = True
+                # a1["ksk"].publish = True
+                # a1["ksk"].sign = True
                 a1["zsk-q3"].publish = False
                 a2["zsk-q3"].publish = True
 
