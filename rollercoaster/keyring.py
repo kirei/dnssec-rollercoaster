@@ -263,7 +263,7 @@ class KeyRing:
             for dnskey in dnskeys:
                 txn.add(zone.origin, dnskey_ttl, dnskey)
             dns.dnssec.sign_zone(
-                zone=zone, add_dnskey=False, keys=keys, lifetime=lifetime, txn=txn
+                zone=zone, add_dnskey=False, keys=keys, lifetime=lifetime, txn=txn, policy=dns.dnssec.allow_all_policy
             )
 
 
