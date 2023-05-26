@@ -14,6 +14,8 @@ from dns.dnssectypes import Algorithm
 from dns.rdtypes.ANY.DNSKEY import DNSKEY
 from dns.rdtypes.dnskeybase import Flag
 
+from .private import MyPrivateKey
+
 logger = logging.getLogger(__name__)
 
 RSA_GENERATOR = functools.partial(
@@ -36,6 +38,7 @@ KEY_GENERATORS = {
     ),
     Algorithm.ED25519: ed25519.Ed25519PrivateKey.generate,
     Algorithm.ED448: ed448.Ed448PrivateKey.generate,
+    Algorithm.PRIVATEDNS: MyPrivateKey.generate,
 }
 
 PRETTY_ALGORTIHM = {
@@ -50,6 +53,7 @@ PRETTY_ALGORTIHM = {
     Algorithm.ECDSAP384SHA384: "ECDSA/P-384/SHA-384",
     Algorithm.ED25519: "Ed25519",
     Algorithm.ED448: "Ed448",
+    Algorithm.PRIVATEDNS: "PrivateDNS",
 }
 
 
@@ -105,11 +109,15 @@ class KeyPair:
 
     @classmethod
     def from_dict(cls, data: dict):
+        algorithm = Algorithm(data["algorithm"])
+        private_key = serialization.load_pem_private_key(
+            data["private_key"].encode(), password=None
+        )
+        if algorithm == Algorithm.PRIVATEDNS:
+            private_key = MyPrivateKey(private_key)
         return cls(
-            algorithm=Algorithm(data["algorithm"]),
-            private_key=serialization.load_pem_private_key(
-                data["private_key"].encode(), password=None
-            ),
+            algorithm=algorithm,
+            private_key=private_key,
             ksk=data.get("ksk", False),
             revoked=data.get("revoked", False),
             sign=data.get("sign", True),

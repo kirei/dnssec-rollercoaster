@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rollercoaster"
-version = "0.3.0"
+version = "0.4.0"
 description = "DNSSEC Rollercoaster"
 authors = ["Jakob Schlyter <jakob@kirei.se>"]
 readme = "README.md"
@@ -13,7 +13,7 @@ rollercoaster-hints = "rollercoaster.hints:main"
 [tool.poetry.dependencies]
 python = "^3.9"
 #dnspython = {git = "https://github.com/rthalley/dnspython.git", rev = "master"}
-dnspython = {git = "https://github.com/jschlyter/dnspython.git", rev = "sign_zone_policy"}
+dnspython = {git = "https://github.com/jschlyter/dnspython.git", rev = "rollercoaster"}
 cryptography = "^40.0.1"
 jinja2 = "^3.1.2"
 

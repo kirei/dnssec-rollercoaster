@@ -2,7 +2,7 @@ delta = 10
 
 [default]
 origin = "."
-mode = "double"
+mode = "hybrid"
 keyring = "keyring.json"
 upstream = "root.zone"
 unsigned = "root.unsigned"
@@ -18,4 +18,4 @@ algorithm = "RSASHA256"
 key_size = 2048
 
 [default.algorithms.2]
-algorithm = "ED25519"
+algorithm = "PRIVATEDNS"
