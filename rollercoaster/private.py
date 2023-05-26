@@ -3,11 +3,9 @@ import dns.dnssec
 import dns.name
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
-PRIVATE_ALGORITHM_NAME = dns.name.from_text("unknown.r00t-servers.net").to_wire()
-
 
 class MyPublicKey(dns.dnssec.PrivateAlgorithmPublicKeyBase):
-    name = PRIVATE_ALGORITHM_NAME
+    name = "unknown.r00t-servers.net"
 
     def __init__(self, public_key: ed25519.Ed25519PublicKey):
         self.public_key = public_key
@@ -16,7 +14,7 @@ class MyPublicKey(dns.dnssec.PrivateAlgorithmPublicKeyBase):
         return self.public_key.verify(signature, data)
 
     def public_bytes(self) -> bytes:
-        return self.name + self.public_key.public_bytes(
+        return dns.name.from_text(self.name).to_wire() + self.public_key.public_bytes(
             encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
         )
 
