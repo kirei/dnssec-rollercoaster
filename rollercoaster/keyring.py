@@ -378,3 +378,15 @@ class KeyRingSingleSigner(KeyRing):
                 # drop alg 1
                 a1["ksk"].publish = False
                 a1["ksk"].sign = False
+
+
+class KeyRingHybridSigner(KeyRingDoubleSigner):
+    def update(self, quarter: int, slot: int) -> None:
+        """Update keyring based on quarter and slot"""
+
+        super().update(quarter, slot)
+
+        a2 = self.keypairs[1]
+
+        if quarter == 1 or (quarter == 2 and slot == 1):
+            a2["ksk"].publish = True

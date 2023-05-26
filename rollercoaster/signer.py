@@ -112,6 +112,8 @@ def get_keyring(config: dict) -> rollercoaster.keyring.KeyRing:
         keyring_cls = rollercoaster.keyring.KeyRingDoubleSigner
     elif mode == "single":
         keyring_cls = rollercoaster.keyring.KeyRingSingleSigner
+    elif mode == "hybrid":
+        keyring_cls = rollercoaster.keyring.KeyRingHybridSigner
     else:
         raise ValueError("Unknown mode")
 
