@@ -1,5 +1,4 @@
 import fileinput
-import re
 
 print("trust-anchors {")
 

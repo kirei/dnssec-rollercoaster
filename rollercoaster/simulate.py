@@ -1,6 +1,6 @@
 from dns.dnssectypes import Algorithm
 
-from rollercoaster.keyring import (
+from rollercoaster.keyring import (  # noqa:W0611
     KeyRingDoubleSigner,
     KeyRingHybridSigner,
     KeyRingSingleSigner,
