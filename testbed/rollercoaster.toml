@@ -3,6 +3,7 @@ delta = 30
 [default]
 #mode = "double"
 mode = "single"
+#mode = "hybrid"
 
 origin = "."
 keyring = "/storage/keyring.json"

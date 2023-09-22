@@ -18,4 +18,8 @@ algorithm = "RSASHA256"
 key_size = 2048
 
 [default.algorithms.2]
-algorithm = "PRIVATEDNS"
+algorithm = "ECDSAP256SHA256"
+
+#[default.algorithms.2]
+#algorithm = "PRIVATEDNS"
+#algorithm_prefix = "unknown.r00t-servers.net"

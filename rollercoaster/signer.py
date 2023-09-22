@@ -11,12 +11,14 @@ import dns.name
 import dns.rdatatype
 import dns.zone
 import dns.zonefile
+from dns.dnssecalgs import register_algorithm_cls
 from dns.dnssectypes import Algorithm, DSDigest
 from dns.rdtypes.ANY.TXT import TXT
 from dns.rdtypes.dnskeybase import Flag
 
 import rollercoaster.keyring
 from rollercoaster import QUARTER_COUNT, SLOTS_PER_QUARTER
+from rollercoaster.private import MyPrivateKey
 from rollercoaster.render import render_html
 from rollercoaster.utils import cmtimer
 
@@ -169,6 +171,12 @@ def main():
             prepare_zone(zone, hints_rrsets)
             with open(config[args.config_section]["unsigned"], "wt") as fp:
                 zone.to_file(fp)
+
+    register_algorithm_cls(
+        algorithm=MyPrivateKey.public_cls.algorithm,
+        algorithm_cls=MyPrivateKey,
+        name=MyPrivateKey.public_cls.name,
+    )
 
     keyring = get_keyring(config[args.config_section])
 

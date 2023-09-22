@@ -1,45 +1,20 @@
-import functools
 import logging
 from dataclasses import dataclass
 from typing import Optional, Union
 
-import cryptography.hazmat.primitives.serialization as serialization
 import dns.dnssec
 import dns.rdatatype
 import dns.zone
 import dns.zonefile
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import dsa, ec, ed448, ed25519, rsa
+from dns.dnssecalgs import GenericPrivateKey, get_algorithm_cls
 from dns.dnssectypes import Algorithm
 from dns.rdtypes.ANY.DNSKEY import DNSKEY
 from dns.rdtypes.dnskeybase import Flag
 
-from .private import MyPrivateKey
+from rollercoaster.private import MyPublicKey
 
 logger = logging.getLogger(__name__)
 
-RSA_GENERATOR = functools.partial(
-    rsa.generate_private_key, backend=default_backend(), public_exponent=65537
-)
-
-KEY_GENERATORS = {
-    Algorithm.RSAMD5: RSA_GENERATOR,
-    Algorithm.DSA: dsa.generate_private_key,
-    Algorithm.RSASHA1: RSA_GENERATOR,
-    Algorithm.DSANSEC3SHA1: dsa.generate_private_key,
-    Algorithm.RSASHA1NSEC3SHA1: RSA_GENERATOR,
-    Algorithm.RSASHA256: RSA_GENERATOR,
-    Algorithm.RSASHA512: RSA_GENERATOR,
-    Algorithm.ECDSAP256SHA256: functools.partial(
-        ec.generate_private_key, curve=ec.SECP256R1
-    ),
-    Algorithm.ECDSAP384SHA384: functools.partial(
-        ec.generate_private_key, curve=ec.SECP384R1
-    ),
-    Algorithm.ED25519: ed25519.Ed25519PrivateKey.generate,
-    Algorithm.ED448: ed448.Ed448PrivateKey.generate,
-    Algorithm.PRIVATEDNS: MyPrivateKey.generate,
-}
 
 PRETTY_ALGORTIHM = {
     Algorithm.RSAMD5: "RSA/MD5",
@@ -60,13 +35,14 @@ PRETTY_ALGORTIHM = {
 @dataclass
 class KeyPair:
     algorithm: Algorithm
-    private_key: dns.dnssec.PrivateKey
+    private_key: GenericPrivateKey
     ksk: bool = False
     revoked: bool = False
     sign: bool = False
     publish: bool = False
     keytag: Optional[int] = None
     name: Optional[str] = None
+    algorithm_prefix: Optional[str] = None
 
     @property
     def flags(self) -> int:
@@ -82,11 +58,7 @@ class KeyPair:
 
     @property
     def dnskey(self) -> DNSKEY:
-        return dns.dnssec.make_dnskey(
-            public_key=self.private_key.public_key(),
-            algorithm=self.algorithm,
-            flags=self.flags,
-        )
+        return self.private_key.public_key().to_dnskey(flags=self.flags)
 
     def as_dict(self, export: bool = True) -> dict:
         res = {
@@ -97,12 +69,10 @@ class KeyPair:
             "sign": self.sign,
             "publish": self.publish,
             "revoked": self.revoked,
-            "private_key": self.private_key.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption(),
-            ).decode(),
+            "private_key": self.private_key.to_pem().decode(),
         }
+        if self.algorithm_prefix:
+            res["algorithm_prefix"] = str(self.algorithm_prefix)
         if not export:
             res["algorithm_name"] = self.algorithm_name
         return res
@@ -110,13 +80,15 @@ class KeyPair:
     @classmethod
     def from_dict(cls, data: dict):
         algorithm = Algorithm(data["algorithm"])
-        private_key = serialization.load_pem_private_key(
-            data["private_key"].encode(), password=None
+        algorithm_prefix = data.get("algorithm_prefix")
+        algorithm_cls = get_algorithm_cls(
+            algorithm,
+            dns.name.from_text(algorithm_prefix) if algorithm_prefix else None,
         )
-        if algorithm == Algorithm.PRIVATEDNS:
-            private_key = MyPrivateKey(private_key)
+        private_key = algorithm_cls.from_pem(data["private_key"].encode())
         return cls(
             algorithm=algorithm,
+            algorithm_prefix=algorithm_prefix,
             private_key=private_key,
             ksk=data.get("ksk", False),
             revoked=data.get("revoked", False),
@@ -133,6 +105,7 @@ class KeyPair:
         key_size: Optional[int] = None,
         ksk: bool = False,
         name: Optional[str] = None,
+        algorithm_prefix: Optional[str] = None,
     ):
         if isinstance(algorithm, str):
             algorithm = Algorithm[algorithm.upper()]
@@ -141,12 +114,17 @@ class KeyPair:
         kwargs = {}
         if key_size:
             kwargs["key_size"] = key_size
-        private_key = KEY_GENERATORS[algorithm](**kwargs)
+        algorithm_cls = get_algorithm_cls(
+            algorithm,
+            dns.name.from_text(algorithm_prefix) if algorithm_prefix else None,
+        )
+        private_key = algorithm_cls.generate(**kwargs)
         res = cls(
             name=name,
             algorithm=algorithm,
             private_key=private_key,
             ksk=ksk,
+            algorithm_prefix=algorithm_prefix,
         )
         res.keytag = dns.dnssec.key_id(res.dnskey)
         logger.debug(
