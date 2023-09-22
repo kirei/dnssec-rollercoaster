@@ -11,8 +11,6 @@ from dns.dnssectypes import Algorithm
 from dns.rdtypes.ANY.DNSKEY import DNSKEY
 from dns.rdtypes.dnskeybase import Flag
 
-from rollercoaster.private import MyPublicKey
-
 logger = logging.getLogger(__name__)
 
 
